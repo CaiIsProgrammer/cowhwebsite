@@ -20,6 +20,16 @@ function assertConfigured() {
   }
 }
 
+// Apps Script always responds 200, reporting failure via a JSON {error}
+// field instead of an HTTP status — surface that as a real rejection so
+// callers' .catch()/error state actually fires instead of silently
+// treating a rejected write (bad password, wrong role, unknown sheet) or a
+// failed read as an empty success.
+function unwrap(data) {
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
 // Apps Script web apps do not answer CORS preflight (OPTIONS) requests, so
 // POST bodies are sent as text/plain to keep them "simple requests" that
 // skip preflight entirely. The server still JSON.parses the body.
@@ -29,12 +39,12 @@ function post(action, payload) {
     .post('', JSON.stringify({ action, ...payload }), {
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     })
-    .then((res) => res.data);
+    .then((res) => unwrap(res.data));
 }
 
 function get(sheet) {
   assertConfigured();
-  return client.get('', { params: { sheet } }).then((res) => res.data);
+  return client.get('', { params: { sheet } }).then((res) => unwrap(res.data));
 }
 
 // Returns { success, role } where role is 'admin', 'instructor', or null.
