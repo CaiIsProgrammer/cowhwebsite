@@ -32,7 +32,8 @@ export default function LoginDialog({ open, onClose }) {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Enter the College password to add or amend records.
+              Enter the Archivist password for full access, or the
+              Instructor password to log a class and its attendance.
             </Typography>
             <TextField
               autoFocus

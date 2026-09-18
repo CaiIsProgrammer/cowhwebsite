@@ -32,7 +32,8 @@ import { getClasses, addClass, deleteClass, getStaff, getStudents } from '../api
 const EMPTY_FORM = { staffName: '', className: '', date: '', time: '', attendees: [] };
 
 export default function ClassesPage() {
-  const { isAuthenticated, password } = useAuth();
+  const { isAdmin, isInstructor, password } = useAuth();
+  const canAddClass = isAdmin || isInstructor;
   const { data: classes, loading, error, refetch } = useSheetData(getClasses);
   const { data: staff } = useSheetData(getStaff);
   const { data: students } = useSheetData(getStudents);
@@ -72,7 +73,7 @@ export default function ClassesPage() {
     <Stack spacing={3}>
       <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Instruction Log</Typography>
-        {isAuthenticated && (
+        {canAddClass && (
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
             Record a Class
           </Button>
@@ -90,7 +91,7 @@ export default function ClassesPage() {
               <TableCell>Date</TableCell>
               <TableCell>Time</TableCell>
               <TableCell>Attendees</TableCell>
-              {isAuthenticated && <TableCell />}
+              {isAdmin && <TableCell />}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -125,7 +126,7 @@ export default function ClassesPage() {
                       ))}
                   </Stack>
                 </TableCell>
-                {isAuthenticated && (
+                {isAdmin && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => handleDelete(c.ID)}>
                       <DeleteOutlineIcon fontSize="small" />

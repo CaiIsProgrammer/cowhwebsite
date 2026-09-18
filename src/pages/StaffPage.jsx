@@ -34,7 +34,7 @@ const ROLES = ['Instructor', 'Arch-Mage', 'Steward', 'Court Wizard', 'Researcher
 const EMPTY_FORM = { name: '', school: '', rank: '', role: '' };
 
 export default function StaffPage() {
-  const { isAuthenticated, password } = useAuth();
+  const { isAdmin, password } = useAuth();
   const { data: staff, loading, error, refetch } = useSheetData(getStaff);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -69,7 +69,7 @@ export default function StaffPage() {
     <Stack spacing={3}>
       <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Staff</Typography>
-        {isAuthenticated && (
+        {isAdmin && (
           <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
             Add Staff Member
           </Button>
@@ -86,7 +86,7 @@ export default function StaffPage() {
               <TableCell>School of Magic</TableCell>
               <TableCell>Rank</TableCell>
               <TableCell>Role</TableCell>
-              {isAuthenticated && <TableCell />}
+              {isAdmin && <TableCell />}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -112,7 +112,7 @@ export default function StaffPage() {
                   <RankChip rank={s.Rank} />
                 </TableCell>
                 <TableCell>{s.Role}</TableCell>
-                {isAuthenticated && (
+                {isAdmin && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => handleDelete(s.ID)}>
                       <DeleteOutlineIcon fontSize="small" />

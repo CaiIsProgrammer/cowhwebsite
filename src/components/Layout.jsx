@@ -22,7 +22,7 @@ const NAV_ITEMS = [
 ];
 
 export default function Layout() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
 
   return (
@@ -60,7 +60,12 @@ export default function Layout() {
 
           {isAuthenticated ? (
             <Stack direction="row" spacing={1.5} alignItems="center">
-              <Chip label="Archivist Access" color="secondary" size="small" variant="outlined" />
+              <Chip
+                label={isAdmin ? 'Archivist Access' : 'Instructor Access'}
+                color="secondary"
+                size="small"
+                variant="outlined"
+              />
               <Button color="inherit" onClick={logout}>
                 Log out
               </Button>

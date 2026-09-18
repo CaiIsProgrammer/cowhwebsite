@@ -16,11 +16,14 @@ free; you only need to deploy it once inside the Sheet itself.
    **Students**, **Staff**, **Classes** — with the correct header rows.
    The first time you run it, Google will ask you to authorize the script;
    accept the permissions (it only touches this one spreadsheet).
-5. Set the shared password: **Project Settings** (gear icon in the left
+5. Set the passwords: **Project Settings** (gear icon in the left
    sidebar) > **Script Properties** > **Add script property**:
-   - Property: `APP_PASSWORD`
-   - Value: whatever password you want to give out to staff who should be
-     able to add/edit records.
+   - Property: `APP_PASSWORD` — the **Archivist** password. Grants full
+     access: add/delete students, staff, and classes.
+   - Property: `INSTRUCTOR_PASSWORD` (optional) — the **Instructor**
+     password. Can only record a class and its attendance — cannot add,
+     edit, or delete students or staff, and cannot delete anything.
+     Leave this property unset if you don't want a separate role.
 6. Deploy it as a web app: **Deploy > New deployment**.
    - Click the gear next to "Select type" and choose **Web app**.
    - Execute as: **Me**.
@@ -37,14 +40,17 @@ deployment (**Deploy > Manage deployments** > pencil icon > **New version**
 ## Why the password isn't just in the React app
 
 The password check happens inside Apps Script (compared against the
-`APP_PASSWORD` script property), not in the front-end JavaScript. Anything
-bundled into a Vite `.env` variable ends up readable in the browser's
-dev tools, so a real secret can't live there. Instead, the client sends
-whatever the user types to the `login` action, Apps Script confirms it
-against the script property, and — if correct — the browser holds onto
+`APP_PASSWORD` / `INSTRUCTOR_PASSWORD` script properties), not in the
+front-end JavaScript. Anything bundled into a Vite `.env` variable ends up
+readable in the browser's dev tools, so a real secret can't live there.
+Instead, the client sends whatever the user types to the `login` action,
+Apps Script confirms it against the script properties and reports back
+which role (if any) it matched, and — if correct — the browser holds onto
 that password in `sessionStorage` for the rest of the tab's session,
-attaching it to each add/delete request so Apps Script can re-check it
-server-side every time.
+attaching it to each write request so Apps Script can re-check both the
+password *and* the role's permissions server-side every time. A request
+using the Instructor password to add a student is rejected by the script
+itself, regardless of what the browser UI shows.
 
 ## Sheet layout
 

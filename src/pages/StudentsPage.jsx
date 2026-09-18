@@ -73,7 +73,7 @@ export default function StudentsPage() {
     <Stack spacing={3}>
       <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Students</Typography>
-        {isAuthenticated && (
+        {isAdmin && (
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -94,7 +94,7 @@ export default function StudentsPage() {
               <TableCell>School of Magic</TableCell>
               <TableCell>Rank</TableCell>
               <TableCell>House</TableCell>
-              {isAuthenticated && <TableCell />}
+              {isAdmin && <TableCell />}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -122,7 +122,7 @@ export default function StudentsPage() {
                   <RankChip rank={s.Rank} />
                 </TableCell>
                 <TableCell>{s.House || '—'}</TableCell>
-                {isAuthenticated && (
+                {isAdmin && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => handleDelete(s.ID)}>
                       <DeleteOutlineIcon fontSize="small" />
