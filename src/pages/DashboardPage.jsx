@@ -5,7 +5,6 @@ import {
   Button,
   Card,
   CardActionArea,
-  CardContent,
   Grid,
   Stack,
   Typography,
@@ -14,16 +13,17 @@ import SchoolIcon from '@mui/icons-material/School';
 import GroupsIcon from '@mui/icons-material/Groups';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import useSheetData from '../hooks/useSheetData';
-import { getStudents, getStaff, getClasses } from '../api/sheetsApi';
+import { getAllSheets } from '../api/sheetsApi';
 
 const TILES = [
-  { to: '/students', label: 'Students', icon: SchoolIcon, fetcher: getStudents },
-  { to: '/staff', label: 'Staff', icon: GroupsIcon, fetcher: getStaff },
-  { to: '/classes', label: 'Classes Taught', icon: MenuBookIcon, fetcher: getClasses },
+  { to: '/students', label: 'Students', icon: SchoolIcon, key: 'students' },
+  { to: '/staff', label: 'Staff', icon: GroupsIcon, key: 'staff' },
+  { to: '/classes', label: 'Classes Taught', icon: MenuBookIcon, key: 'classes' },
 ];
 
-function CountTile({ to, label, icon: Icon, fetcher }) {
-  const { data, loading, error } = useSheetData(fetcher);
+const EMPTY = { students: [], staff: [], classes: [] };
+
+function CountTile({ to, label, icon: Icon, count, loading, error }) {
   return (
     <Grid size={{ xs: 12, sm: 4 }}>
       <Card>
@@ -31,7 +31,7 @@ function CountTile({ to, label, icon: Icon, fetcher }) {
           <Stack spacing={1} alignItems="center">
             <Icon color="secondary" sx={{ fontSize: 40 }} />
             <Typography variant="h3" component="div">
-              {loading ? '—' : error ? '!' : data.length}
+              {loading ? '—' : error ? '!' : count}
             </Typography>
             <Typography variant="overline" color="text.secondary">
               {label}
@@ -45,6 +45,9 @@ function CountTile({ to, label, icon: Icon, fetcher }) {
 
 export default function DashboardPage() {
   const missingConfig = !import.meta.env.VITE_SHEETS_API_URL;
+  // One round trip for all three counts instead of three separate calls —
+  // Apps Script's per-call latency makes that difference very noticeable.
+  const { data, loading, error } = useSheetData(getAllSheets, EMPTY);
 
   return (
     <Stack spacing={4}>
@@ -67,9 +70,19 @@ export default function DashboardPage() {
         </Alert>
       )}
 
+      {error && <Alert severity="error">{error}</Alert>}
+
       <Grid container spacing={3}>
         {TILES.map((tile) => (
-          <CountTile key={tile.to} {...tile} />
+          <CountTile
+            key={tile.to}
+            to={tile.to}
+            label={tile.label}
+            icon={tile.icon}
+            count={data[tile.key].length}
+            loading={loading}
+            error={error}
+          />
         ))}
       </Grid>
 

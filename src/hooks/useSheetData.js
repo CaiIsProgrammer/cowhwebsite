@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // Shared fetch/loading/error/refetch plumbing for pages backed by a sheet.
-export default function useSheetData(fetcher) {
-  const [data, setData] = useState([]);
+export default function useSheetData(fetcher, initialValue = []) {
+  const [data, setData] = useState(initialValue);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 

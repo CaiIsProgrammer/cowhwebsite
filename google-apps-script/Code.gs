@@ -47,6 +47,18 @@ function setupSheets() {
 
 function doGet(e) {
   const sheetName = e.parameter.sheet;
+
+  // Fetch all three tabs in a single round trip — used by pages that need
+  // more than one sheet at once, since each separate call to this web app
+  // has its own latency (cold starts, a mandatory redirect hop).
+  if (sheetName === 'all') {
+    const result = {};
+    Object.keys(SHEET_HEADERS).forEach((name) => {
+      result[name] = sheetToObjects_(getSheet_(name));
+    });
+    return jsonOutput_(result);
+  }
+
   const sheet = getSheet_(sheetName);
   if (!sheet) return jsonOutput_({ error: 'Unknown sheet: ' + sheetName });
   return jsonOutput_({ rows: sheetToObjects_(sheet) });

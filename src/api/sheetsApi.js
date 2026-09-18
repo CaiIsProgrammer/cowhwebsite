@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getOrFetch, setCached, invalidate } from './cache';
 
 // The "backend" for this app is a Google Apps Script Web App bound to a
 // Google Sheet (see /google-apps-script/Code.gs). There is no server to
@@ -47,31 +48,47 @@ export function verifyPassword(password) {
 }
 
 export function getStudents() {
-  return get('Students').then((data) => data.rows ?? []);
+  return getOrFetch('Students', () => get('Students').then((data) => data.rows ?? []));
 }
 
 export function addStudent({ name, school, rank, house, password }) {
-  return post('addStudent', { name, school, rank, house, password });
+  return post('addStudent', { name, school, rank, house, password }).then((result) => {
+    invalidate('Students');
+    invalidate('all');
+    return result;
+  });
 }
 
 export function deleteStudent({ id, password }) {
-  return post('deleteRow', { sheet: 'Students', id, password });
+  return post('deleteRow', { sheet: 'Students', id, password }).then((result) => {
+    invalidate('Students');
+    invalidate('all');
+    return result;
+  });
 }
 
 export function getStaff() {
-  return get('Staff').then((data) => data.rows ?? []);
+  return getOrFetch('Staff', () => get('Staff').then((data) => data.rows ?? []));
 }
 
 export function addStaff({ name, school, rank, role, password }) {
-  return post('addStaff', { name, school, rank, role, password });
+  return post('addStaff', { name, school, rank, role, password }).then((result) => {
+    invalidate('Staff');
+    invalidate('all');
+    return result;
+  });
 }
 
 export function deleteStaff({ id, password }) {
-  return post('deleteRow', { sheet: 'Staff', id, password });
+  return post('deleteRow', { sheet: 'Staff', id, password }).then((result) => {
+    invalidate('Staff');
+    invalidate('all');
+    return result;
+  });
 }
 
 export function getClasses() {
-  return get('Classes').then((data) => data.rows ?? []);
+  return getOrFetch('Classes', () => get('Classes').then((data) => data.rows ?? []));
 }
 
 export function addClass({ staffName, className, date, time, attendees, password }) {
@@ -82,9 +99,35 @@ export function addClass({ staffName, className, date, time, attendees, password
     time,
     attendees: attendees.join(', '),
     password,
+  }).then((result) => {
+    invalidate('Classes');
+    invalidate('all');
+    return result;
   });
 }
 
 export function deleteClass({ id, password }) {
-  return post('deleteRow', { sheet: 'Classes', id, password });
+  return post('deleteRow', { sheet: 'Classes', id, password }).then((result) => {
+    invalidate('Classes');
+    invalidate('all');
+    return result;
+  });
+}
+
+// Fetches Students, Staff and Classes in a single HTTP round trip instead
+// of three, and primes each sheet's individual cache entry so a later
+// getStudents()/getStaff()/getClasses() call (e.g. navigating to another
+// page) resolves instantly instead of re-fetching.
+export function getAllSheets() {
+  return getOrFetch('all', () =>
+    get('all').then((data) => {
+      const students = data.Students ?? [];
+      const staff = data.Staff ?? [];
+      const classes = data.Classes ?? [];
+      setCached('Students', students);
+      setCached('Staff', staff);
+      setCached('Classes', classes);
+      return { students, staff, classes };
+    })
+  );
 }
