@@ -66,22 +66,23 @@ export default function StudentDetailPage() {
     [data.classes, student]
   );
 
+  // Classes recorded before the School/ClassType columns existed (or edited
+  // directly in the Sheet) may not have a recognized value for either — put
+  // those in an "Unspecified" bucket instead of silently dropping them, so
+  // the grouped view always accounts for every class in attendedClasses.
   const bySchool = useMemo(() => {
     const grouped = {};
-    SCHOOLS.forEach((school) => {
-      grouped[school] = {};
-      CLASS_TYPES.forEach((type) => {
-        grouped[school][type] = attendedClasses.filter(
-          (c) => c.School === school && c.ClassType === type
-        );
-      });
+    attendedClasses.forEach((c) => {
+      const school = SCHOOLS.includes(c.School) ? c.School : 'Unspecified';
+      const type = CLASS_TYPES.includes(c.ClassType) ? c.ClassType : 'Unspecified';
+      grouped[school] = grouped[school] || {};
+      grouped[school][type] = grouped[school][type] || [];
+      grouped[school][type].push(c);
     });
     return grouped;
   }, [attendedClasses]);
 
-  const schoolsWithAttendance = SCHOOLS.filter((school) =>
-    CLASS_TYPES.some((type) => bySchool[school][type].length > 0)
-  );
+  const schoolOrder = [...SCHOOLS, 'Unspecified'].filter((school) => bySchool[school]);
 
   if (loading) {
     return (
@@ -142,31 +143,38 @@ export default function StudentDetailPage() {
         {attendedClasses.length} class{attendedClasses.length === 1 ? '' : 'es'} attended.
       </Typography>
 
-      {schoolsWithAttendance.length === 0 && (
+      {schoolOrder.length === 0 && (
         <Alert severity="info">No attendance recorded for this student yet.</Alert>
       )}
 
-      {schoolsWithAttendance.map((school) => (
-        <Paper key={school} sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            {school}
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={3}>
-            {CLASS_TYPES.map((type) => (
-              <Grid key={type} size={{ xs: 12, sm: 6 }}>
-                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
-                  <Chip label={type} size="small" color="secondary" variant="outlined" />
-                  <Typography variant="caption" color="text.secondary">
-                    {bySchool[school][type].length}
-                  </Typography>
-                </Stack>
-                <ClassList classes={bySchool[school][type]} />
-              </Grid>
-            ))}
-          </Grid>
-        </Paper>
-      ))}
+      {schoolOrder.map((school) => {
+        // Always show the two real class types for a consistent layout;
+        // only add an "Unspecified" column if this school actually has one.
+        const typeColumns = [...CLASS_TYPES, 'Unspecified'].filter(
+          (type) => type !== 'Unspecified' || bySchool[school]['Unspecified']
+        );
+        return (
+          <Paper key={school} sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              {school}
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Grid container spacing={3}>
+              {typeColumns.map((type) => (
+                <Grid key={type} size={{ xs: 12, sm: 6 }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
+                    <Chip label={type} size="small" color="secondary" variant="outlined" />
+                    <Typography variant="caption" color="text.secondary">
+                      {(bySchool[school][type] || []).length}
+                    </Typography>
+                  </Stack>
+                  <ClassList classes={bySchool[school][type] || []} />
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        );
+      })}
     </Stack>
   );
 }
