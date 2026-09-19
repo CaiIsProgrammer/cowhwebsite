@@ -24,12 +24,23 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useAuth } from '../context/AuthContext';
 import useSheetData from '../hooks/useSheetData';
-import { getClasses, addClass, deleteClass, getStaff, getStudents } from '../api/sheetsApi';
+import { getClasses, addClass, updateClass, deleteClass, getStaff, getStudents } from '../api/sheetsApi';
+import { toDateInputValue, toTimeInputValue } from '../utils/dateInput';
+import { SCHOOLS, CLASS_TYPES } from '../theme/theme';
 
-const EMPTY_FORM = { staffName: '', className: '', date: '', time: '', attendees: [] };
+const EMPTY_FORM = {
+  staffName: '',
+  className: '',
+  classType: '',
+  school: '',
+  date: '',
+  time: '',
+  attendees: [],
+};
 
 export default function ClassesPage() {
   const { isAdmin, isInstructor, password } = useAuth();
@@ -39,6 +50,7 @@ export default function ClassesPage() {
   const { data: students } = useSheetData(getStudents);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -47,17 +59,47 @@ export default function ClassesPage() {
 
   const handleField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const openAddDialog = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (cls) => {
+    setEditingId(cls.ID);
+    setForm({
+      staffName: cls.StaffName ?? '',
+      className: cls.ClassName ?? '',
+      classType: cls.ClassType ?? '',
+      school: cls.School ?? '',
+      date: toDateInputValue(cls.Date),
+      time: toTimeInputValue(cls.Time),
+      attendees: (cls.Attendees || '')
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean),
+    });
+    setFormError('');
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setFormError('');
     try {
-      await addClass({ ...form, password });
+      if (editingId) {
+        await updateClass({ id: editingId, ...form, password });
+      } else {
+        await addClass({ ...form, password });
+      }
       setDialogOpen(false);
       setForm(EMPTY_FORM);
+      setEditingId(null);
       await refetch();
     } catch (err) {
-      setFormError(err.message || 'Could not record this class.');
+      setFormError(err.message || 'Could not save this class.');
     } finally {
       setSaving(false);
     }
@@ -74,7 +116,7 @@ export default function ClassesPage() {
       <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Instruction Log</Typography>
         {canAddClass && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
             Record a Class
           </Button>
         )}
@@ -88,6 +130,8 @@ export default function ClassesPage() {
             <TableRow>
               <TableCell>Staff</TableCell>
               <TableCell>Class</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>School of Magic</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Time</TableCell>
               <TableCell>Attendees</TableCell>
@@ -97,14 +141,14 @@ export default function ClassesPage() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   <CircularProgress size={24} sx={{ my: 2 }} />
                 </TableCell>
               </TableRow>
             )}
             {!loading && classes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   <Typography color="text.secondary">No classes recorded yet.</Typography>
                 </TableCell>
               </TableRow>
@@ -113,10 +157,12 @@ export default function ClassesPage() {
               <TableRow key={c.ID} hover>
                 <TableCell>{c.StaffName}</TableCell>
                 <TableCell>{c.ClassName}</TableCell>
+                <TableCell>{c.ClassType || '—'}</TableCell>
+                <TableCell>{c.School || '—'}</TableCell>
                 <TableCell>{c.Date}</TableCell>
                 <TableCell>{c.Time}</TableCell>
                 <TableCell>
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                  <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
                     {(c.Attendees || '')
                       .split(',')
                       .map((name) => name.trim())
@@ -128,6 +174,9 @@ export default function ClassesPage() {
                 </TableCell>
                 {isAdmin && (
                   <TableCell align="right">
+                    <IconButton size="small" onClick={() => openEditDialog(c)}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
                     <IconButton size="small" onClick={() => handleDelete(c.ID)}>
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
@@ -141,7 +190,7 @@ export default function ClassesPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <form onSubmit={handleSubmit}>
-          <DialogTitle>Record a Class</DialogTitle>
+          <DialogTitle>{editingId ? 'Edit Class' : 'Record a Class'}</DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField
@@ -165,6 +214,36 @@ export default function ClassesPage() {
                 onChange={handleField('className')}
                 placeholder="e.g. Fundamentals of Destruction"
               />
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  select
+                  label="Class Type"
+                  required
+                  value={form.classType}
+                  onChange={handleField('classType')}
+                  fullWidth
+                >
+                  {CLASS_TYPES.map((t) => (
+                    <MenuItem key={t} value={t}>
+                      {t}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  label="School of Magic"
+                  required
+                  value={form.school}
+                  onChange={handleField('school')}
+                  fullWidth
+                >
+                  {SCHOOLS.map((s) => (
+                    <MenuItem key={s} value={s}>
+                      {s}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Stack>
               <Stack direction="row" spacing={2}>
                 <TextField
                   label="Date"
@@ -202,7 +281,7 @@ export default function ClassesPage() {
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              {saving ? 'Saving…' : 'Save Class'}
+              {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Save Class'}
             </Button>
           </DialogActions>
         </form>

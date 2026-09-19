@@ -22,10 +22,11 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useAuth } from '../context/AuthContext';
 import useSheetData from '../hooks/useSheetData';
-import { getStaff, addStaff, deleteStaff } from '../api/sheetsApi';
+import { getStaff, addStaff, updateStaff, deleteStaff } from '../api/sheetsApi';
 import { RANKS, SCHOOLS } from '../theme/theme';
 import RankChip from '../components/RankChip';
 
@@ -37,23 +38,48 @@ export default function StaffPage() {
   const { isAdmin, password } = useAuth();
   const { data: staff, loading, error, refetch } = useSheetData(getStaff);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
   const handleField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const openAddDialog = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (member) => {
+    setEditingId(member.ID);
+    setForm({
+      name: member.Name ?? '',
+      school: member.School ?? '',
+      rank: member.Rank ?? '',
+      role: member.Role ?? '',
+    });
+    setFormError('');
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setFormError('');
     try {
-      await addStaff({ ...form, password });
+      if (editingId) {
+        await updateStaff({ id: editingId, ...form, password });
+      } else {
+        await addStaff({ ...form, password });
+      }
       setDialogOpen(false);
       setForm(EMPTY_FORM);
+      setEditingId(null);
       await refetch();
     } catch (err) {
-      setFormError(err.message || 'Could not add staff member.');
+      setFormError(err.message || 'Could not save staff member.');
     } finally {
       setSaving(false);
     }
@@ -70,7 +96,7 @@ export default function StaffPage() {
       <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Staff</Typography>
         {isAdmin && (
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setDialogOpen(true)}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
             Add Staff Member
           </Button>
         )}
@@ -114,6 +140,9 @@ export default function StaffPage() {
                 <TableCell>{s.Role}</TableCell>
                 {isAdmin && (
                   <TableCell align="right">
+                    <IconButton size="small" onClick={() => openEditDialog(s)}>
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
                     <IconButton size="small" onClick={() => handleDelete(s.ID)}>
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
@@ -127,7 +156,7 @@ export default function StaffPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
         <form onSubmit={handleSubmit}>
-          <DialogTitle>Add a Staff Member</DialogTitle>
+          <DialogTitle>{editingId ? 'Edit Staff Member' : 'Add a Staff Member'}</DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField
@@ -172,7 +201,7 @@ export default function StaffPage() {
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              {saving ? 'Saving…' : 'Add Staff Member'}
+              {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add Staff Member'}
             </Button>
           </DialogActions>
         </form>

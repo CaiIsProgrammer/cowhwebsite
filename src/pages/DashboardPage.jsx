@@ -28,7 +28,7 @@ function CountTile({ to, label, icon: Icon, count, loading, error }) {
     <Grid size={{ xs: 12, sm: 4 }}>
       <Card>
         <CardActionArea component={RouterLink} to={to} sx={{ p: 3 }}>
-          <Stack spacing={1} alignItems="center">
+          <Stack spacing={1} sx={{ alignItems: 'center' }}>
             <Icon color="secondary" sx={{ fontSize: 40 }} />
             <Typography variant="h3" component="div">
               {loading ? '—' : error ? '!' : count}
@@ -51,7 +51,7 @@ export default function DashboardPage() {
 
   return (
     <Stack spacing={4}>
-      <Box textAlign="center">
+      <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h2" gutterBottom>
           The Hall of the Elements
         </Typography>
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         ))}
       </Grid>
 
-      <Stack direction="row" spacing={2} justifyContent="center">
+      <Stack direction="row" spacing={2} sx={{ justifyContent: 'center' }}>
         <Button component={RouterLink} to="/students" variant="outlined" color="secondary">
           View Students
         </Button>

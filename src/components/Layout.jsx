@@ -29,7 +29,7 @@ export default function Layout() {
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AppBar position="sticky" elevation={0}>
         <Toolbar sx={{ gap: 3 }}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mr: 2 }}>
+          <Stack direction="row" spacing={1} sx={{ mr: 2, alignItems: 'center' }}>
             <AcUnitIcon color="primary" />
             <Typography variant="h6" component="div" sx={{ letterSpacing: '0.05em' }}>
               College of Winterhold
@@ -59,7 +59,7 @@ export default function Layout() {
           </Stack>
 
           {isAuthenticated ? (
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <Chip
                 label={isAdmin ? 'Archivist Access' : 'Instructor Access'}
                 color="secondary"

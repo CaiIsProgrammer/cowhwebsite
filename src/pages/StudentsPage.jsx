@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Autocomplete,
@@ -23,19 +24,22 @@ import {
   CircularProgress,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useAuth } from '../context/AuthContext';
 import useSheetData from '../hooks/useSheetData';
-import { getStudents, addStudent, deleteStudent } from '../api/sheetsApi';
+import { getStudents, addStudent, updateStudent, deleteStudent } from '../api/sheetsApi';
 import { RANKS, SCHOOLS } from '../theme/theme';
 import RankChip from '../components/RankChip';
 
 const EMPTY_FORM = { name: '', school: '', rank: '', house: '' };
 
 export default function StudentsPage() {
+  const navigate = useNavigate();
   const { isAdmin, password } = useAuth();
   const { data: students, loading, error, refetch } = useSheetData(getStudents);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -47,17 +51,41 @@ export default function StudentsPage() {
 
   const handleField = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
+  const openAddDialog = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setFormError('');
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (student) => {
+    setEditingId(student.ID);
+    setForm({
+      name: student.Name ?? '',
+      school: student.School ?? '',
+      rank: student.Rank ?? '',
+      house: student.House ?? '',
+    });
+    setFormError('');
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setFormError('');
     try {
-      await addStudent({ ...form, password });
+      if (editingId) {
+        await updateStudent({ id: editingId, ...form, password });
+      } else {
+        await addStudent({ ...form, password });
+      }
       setDialogOpen(false);
       setForm(EMPTY_FORM);
+      setEditingId(null);
       await refetch();
     } catch (err) {
-      setFormError(err.message || 'Could not add student.');
+      setFormError(err.message || 'Could not save student.');
     } finally {
       setSaving(false);
     }
@@ -74,11 +102,7 @@ export default function StudentsPage() {
       <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4">Students</Typography>
         {isAdmin && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setDialogOpen(true)}
-          >
+          <Button variant="contained" startIcon={<AddIcon />} onClick={openAddDialog}>
             Add Student
           </Button>
         )}
@@ -115,7 +139,12 @@ export default function StudentsPage() {
               </TableRow>
             )}
             {students.map((s) => (
-              <TableRow key={s.ID} hover>
+              <TableRow
+                key={s.ID}
+                hover
+                onClick={() => navigate(`/students/${s.ID}`)}
+                sx={{ cursor: 'pointer' }}
+              >
                 <TableCell>{s.Name}</TableCell>
                 <TableCell>{s.School}</TableCell>
                 <TableCell>
@@ -124,7 +153,22 @@ export default function StudentsPage() {
                 <TableCell>{s.House || '—'}</TableCell>
                 {isAdmin && (
                   <TableCell align="right">
-                    <IconButton size="small" onClick={() => handleDelete(s.ID)}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditDialog(s);
+                      }}
+                    >
+                      <EditOutlinedIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(s.ID);
+                      }}
+                    >
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
@@ -137,7 +181,7 @@ export default function StudentsPage() {
 
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="xs" fullWidth>
         <form onSubmit={handleSubmit}>
-          <DialogTitle>Enroll a Student</DialogTitle>
+          <DialogTitle>{editingId ? 'Edit Student' : 'Enroll a Student'}</DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ mt: 1 }}>
               <TextField
@@ -188,7 +232,7 @@ export default function StudentsPage() {
               Cancel
             </Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              {saving ? 'Saving…' : 'Add Student'}
+              {saving ? 'Saving…' : editingId ? 'Save Changes' : 'Add Student'}
             </Button>
           </DialogActions>
         </form>

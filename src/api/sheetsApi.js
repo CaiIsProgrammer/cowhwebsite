@@ -69,6 +69,19 @@ export function addStudent({ name, school, rank, house, password }) {
   });
 }
 
+export function updateStudent({ id, name, school, rank, house, password }) {
+  return post('updateRow', {
+    sheet: 'Students',
+    id,
+    fields: { Name: name, School: school, Rank: rank, House: house },
+    password,
+  }).then((result) => {
+    invalidate('Students');
+    invalidate('all');
+    return result;
+  });
+}
+
 export function deleteStudent({ id, password }) {
   return post('deleteRow', { sheet: 'Students', id, password }).then((result) => {
     invalidate('Students');
@@ -89,6 +102,19 @@ export function addStaff({ name, school, rank, role, password }) {
   });
 }
 
+export function updateStaff({ id, name, school, rank, role, password }) {
+  return post('updateRow', {
+    sheet: 'Staff',
+    id,
+    fields: { Name: name, School: school, Rank: rank, Role: role },
+    password,
+  }).then((result) => {
+    invalidate('Staff');
+    invalidate('all');
+    return result;
+  });
+}
+
 export function deleteStaff({ id, password }) {
   return post('deleteRow', { sheet: 'Staff', id, password }).then((result) => {
     invalidate('Staff');
@@ -101,13 +127,36 @@ export function getClasses() {
   return getOrFetch('Classes', () => get('Classes').then((data) => data.rows ?? []));
 }
 
-export function addClass({ staffName, className, date, time, attendees, password }) {
+export function addClass({ staffName, className, classType, school, date, time, attendees, password }) {
   return post('addClass', {
     staffName,
     className,
+    classType,
+    school,
     date,
     time,
     attendees: attendees.join(', '),
+    password,
+  }).then((result) => {
+    invalidate('Classes');
+    invalidate('all');
+    return result;
+  });
+}
+
+export function updateClass({ id, staffName, className, classType, school, date, time, attendees, password }) {
+  return post('updateRow', {
+    sheet: 'Classes',
+    id,
+    fields: {
+      StaffName: staffName,
+      ClassName: className,
+      ClassType: classType,
+      School: school,
+      Date: date,
+      Time: time,
+      Attendees: attendees.join(', '),
+    },
     password,
   }).then((result) => {
     invalidate('Classes');
