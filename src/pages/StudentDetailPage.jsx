@@ -43,7 +43,22 @@ function ClassList({ classes }) {
       {classes.map((c) => (
         <ListItem key={c.ID} disableGutters>
           <ListItemText
-            primary={c.ClassName}
+            primary={
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                <Typography variant="body2" component="span">
+                  {c.ClassName}
+                </Typography>
+                {c.Difficulty && (
+                  <Chip
+                    label={c.Difficulty}
+                    size="small"
+                    variant="outlined"
+                    color={c.Difficulty === 'Advanced' ? 'secondary' : 'default'}
+                    sx={{ height: 18, '& .MuiChip-label': { px: 0.75, fontSize: '0.65rem' } }}
+                  />
+                )}
+              </Stack>
+            }
             secondary={[c.StaffName, c.Date, c.Time].filter(Boolean).join(' · ')}
           />
         </ListItem>

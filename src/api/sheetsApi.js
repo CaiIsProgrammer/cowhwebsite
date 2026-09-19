@@ -127,11 +127,22 @@ export function getClasses() {
   return getOrFetch('Classes', () => get('Classes').then((data) => data.rows ?? []));
 }
 
-export function addClass({ staffName, className, classType, school, date, time, attendees, password }) {
+export function addClass({
+  staffName,
+  className,
+  classType,
+  difficulty,
+  school,
+  date,
+  time,
+  attendees,
+  password,
+}) {
   return post('addClass', {
     staffName,
     className,
     classType,
+    difficulty,
     school,
     date,
     time,
@@ -144,7 +155,18 @@ export function addClass({ staffName, className, classType, school, date, time, 
   });
 }
 
-export function updateClass({ id, staffName, className, classType, school, date, time, attendees, password }) {
+export function updateClass({
+  id,
+  staffName,
+  className,
+  classType,
+  difficulty,
+  school,
+  date,
+  time,
+  attendees,
+  password,
+}) {
   return post('updateRow', {
     sheet: 'Classes',
     id,
@@ -152,6 +174,7 @@ export function updateClass({ id, staffName, className, classType, school, date,
       StaffName: staffName,
       ClassName: className,
       ClassType: classType,
+      Difficulty: difficulty,
       School: school,
       Date: date,
       Time: time,

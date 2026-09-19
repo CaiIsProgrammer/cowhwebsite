@@ -59,11 +59,11 @@ Each tab's first row is the header; do not reorder or rename these columns
 
 - **Students**: `ID`, `Name`, `School`, `Rank`, `House`, `CreatedAt`
 - **Staff**: `ID`, `Name`, `School`, `Rank`, `Role`, `CreatedAt`
-- **Classes**: `ID`, `StaffName`, `ClassName`, `ClassType`, `School`, `Date`, `Time`, `Attendees`, `CreatedAt`
+- **Classes**: `ID`, `StaffName`, `ClassName`, `ClassType`, `Difficulty`, `School`, `Date`, `Time`, `Attendees`, `CreatedAt`
 
 `ID` is a generated UUID, and `Attendees` is a comma-separated list of
 student names who attended that class. `ClassType` is either `Expedition`
-or `Lecture`.
+or `Lecture`, and `Difficulty` is either `Regular` or `Advanced`.
 
 Writes are matched to columns **by header name**, not position, so adding
 a new column to `SHEET_HEADERS` in `Code.gs` is safe for new rows. It won't

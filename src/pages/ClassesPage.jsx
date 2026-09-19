@@ -30,12 +30,13 @@ import { useAuth } from '../context/AuthContext';
 import useSheetData from '../hooks/useSheetData';
 import { getClasses, addClass, updateClass, deleteClass, getStaff, getStudents } from '../api/sheetsApi';
 import { toDateInputValue, toTimeInputValue } from '../utils/dateInput';
-import { SCHOOLS, CLASS_TYPES } from '../theme/theme';
+import { SCHOOLS, CLASS_TYPES, CLASS_DIFFICULTIES } from '../theme/theme';
 
 const EMPTY_FORM = {
   staffName: '',
   className: '',
   classType: '',
+  difficulty: '',
   school: '',
   date: '',
   time: '',
@@ -72,6 +73,7 @@ export default function ClassesPage() {
       staffName: cls.StaffName ?? '',
       className: cls.ClassName ?? '',
       classType: cls.ClassType ?? '',
+      difficulty: cls.Difficulty ?? '',
       school: cls.School ?? '',
       date: toDateInputValue(cls.Date),
       time: toTimeInputValue(cls.Time),
@@ -131,6 +133,7 @@ export default function ClassesPage() {
               <TableCell>Staff</TableCell>
               <TableCell>Class</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>Difficulty</TableCell>
               <TableCell>School of Magic</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Time</TableCell>
@@ -141,14 +144,14 @@ export default function ClassesPage() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   <CircularProgress size={24} sx={{ my: 2 }} />
                 </TableCell>
               </TableRow>
             )}
             {!loading && classes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   <Typography color="text.secondary">No classes recorded yet.</Typography>
                 </TableCell>
               </TableRow>
@@ -158,6 +161,7 @@ export default function ClassesPage() {
                 <TableCell>{c.StaffName}</TableCell>
                 <TableCell>{c.ClassName}</TableCell>
                 <TableCell>{c.ClassType || '—'}</TableCell>
+                <TableCell>{c.Difficulty || '—'}</TableCell>
                 <TableCell>{c.School || '—'}</TableCell>
                 <TableCell>{c.Date}</TableCell>
                 <TableCell>{c.Time}</TableCell>
@@ -244,6 +248,19 @@ export default function ClassesPage() {
                   ))}
                 </TextField>
               </Stack>
+              <TextField
+                select
+                label="Difficulty"
+                required
+                value={form.difficulty}
+                onChange={handleField('difficulty')}
+              >
+                {CLASS_DIFFICULTIES.map((d) => (
+                  <MenuItem key={d} value={d}>
+                    {d}
+                  </MenuItem>
+                ))}
+              </TextField>
               <Stack direction="row" spacing={2}>
                 <TextField
                   label="Date"

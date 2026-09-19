@@ -136,6 +136,9 @@ export const SCHOOLS = ['Alteration', 'Conjuration', 'Destruction', 'Illusion', 
 // The two kinds of session a class can be logged as.
 export const CLASS_TYPES = ['Expedition', 'Lecture'];
 
+// How demanding a class is.
+export const CLASS_DIFFICULTIES = ['Regular', 'Advanced'];
+
 export const RANK_COLORS = {
   Novice: frost[700],
   Apprentice: frost[500],
