@@ -61,19 +61,19 @@ export function getStudents() {
   return getOrFetch('Students', () => get('Students').then((data) => data.rows ?? []));
 }
 
-export function addStudent({ name, school, rank, house, password }) {
-  return post('addStudent', { name, school, rank, house, password }).then((result) => {
+export function addStudent({ name, school, rank, house, faction, password }) {
+  return post('addStudent', { name, school, rank, house, faction, password }).then((result) => {
     invalidate('Students');
     invalidate('all');
     return result;
   });
 }
 
-export function updateStudent({ id, name, school, rank, house, password }) {
+export function updateStudent({ id, name, school, rank, house, faction, password }) {
   return post('updateRow', {
     sheet: 'Students',
     id,
-    fields: { Name: name, School: school, Rank: rank, House: house },
+    fields: { Name: name, School: school, Rank: rank, House: house, Faction: faction },
     password,
   }).then((result) => {
     invalidate('Students');

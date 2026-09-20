@@ -25,7 +25,7 @@
  */
 
 const SHEET_HEADERS = {
-  Students: ['ID', 'Name', 'School', 'Rank', 'House', 'CreatedAt'],
+  Students: ['ID', 'Name', 'School', 'Rank', 'House', 'Faction', 'CreatedAt'],
   Staff: ['ID', 'Name', 'School', 'Rank', 'Role', 'CreatedAt'],
   Classes: [
     'ID',
@@ -109,7 +109,13 @@ function doPost(e) {
   switch (action) {
     case 'addStudent':
       return jsonOutput_(
-        appendRow_('Students', { Name: body.name, School: body.school, Rank: body.rank, House: body.house })
+        appendRow_('Students', {
+          Name: body.name,
+          School: body.school,
+          Rank: body.rank,
+          House: body.house,
+          Faction: body.faction,
+        })
       );
     case 'addStaff':
       return jsonOutput_(

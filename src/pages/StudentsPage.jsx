@@ -32,7 +32,7 @@ import { getStudents, addStudent, updateStudent, deleteStudent } from '../api/sh
 import { RANKS, SCHOOLS } from '../theme/theme';
 import RankChip from '../components/RankChip';
 
-const EMPTY_FORM = { name: '', school: '', rank: '', house: '' };
+const EMPTY_FORM = { name: '', school: '', rank: '', faction: '' };
 
 export default function StudentsPage() {
   const navigate = useNavigate();
@@ -44,8 +44,8 @@ export default function StudentsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  const knownHouses = useMemo(
-    () => [...new Set(students.map((s) => s.House).filter(Boolean))],
+  const knownFactions = useMemo(
+    () => [...new Set(students.map((s) => s.Faction).filter(Boolean))],
     [students]
   );
 
@@ -64,7 +64,7 @@ export default function StudentsPage() {
       name: student.Name ?? '',
       school: student.School ?? '',
       rank: student.Rank ?? '',
-      house: student.House ?? '',
+      faction: student.Faction ?? '',
     });
     setFormError('');
     setDialogOpen(true);
@@ -117,7 +117,7 @@ export default function StudentsPage() {
               <TableCell>Name</TableCell>
               <TableCell>School of Magic</TableCell>
               <TableCell>Rank</TableCell>
-              <TableCell>House</TableCell>
+              <TableCell>Faction</TableCell>
               {isAdmin && <TableCell />}
             </TableRow>
           </TableHead>
@@ -150,7 +150,7 @@ export default function StudentsPage() {
                 <TableCell>
                   <RankChip rank={s.Rank} />
                 </TableCell>
-                <TableCell>{s.House || '—'}</TableCell>
+                <TableCell>{s.Faction || '—'}</TableCell>
                 {isAdmin && (
                   <TableCell align="right">
                     <IconButton
@@ -219,10 +219,12 @@ export default function StudentsPage() {
               </TextField>
               <Autocomplete
                 freeSolo
-                options={knownHouses}
-                value={form.house}
-                onInputChange={(_, value) => setForm((f) => ({ ...f, house: value }))}
-                renderInput={(params) => <TextField {...params} label="House" />}
+                options={knownFactions}
+                value={form.faction}
+                onInputChange={(_, value) => setForm((f) => ({ ...f, faction: value }))}
+                renderInput={(params) => (
+                  <TextField {...params} label="Faction" placeholder="e.g. Companions" />
+                )}
               />
               {formError && <Alert severity="error">{formError}</Alert>}
             </Stack>

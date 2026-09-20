@@ -57,7 +57,7 @@ itself, regardless of what the browser UI shows.
 Each tab's first row is the header; do not reorder or rename these columns
 (the script and the app both key off the header names):
 
-- **Students**: `ID`, `Name`, `School`, `Rank`, `House`, `CreatedAt`
+- **Students**: `ID`, `Name`, `School`, `Rank`, `House`, `Faction`, `CreatedAt`
 - **Staff**: `ID`, `Name`, `School`, `Rank`, `Role`, `CreatedAt`
 - **Classes**: `ID`, `StaffName`, `ClassName`, `ClassType`, `Difficulty`, `School`, `Date`, `Time`, `Attendees`, `CreatedAt`
 

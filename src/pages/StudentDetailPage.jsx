@@ -141,13 +141,13 @@ export default function StudentDetailPage() {
           <Typography variant="body2" color="text.secondary">
             {student.School}
           </Typography>
-          {student.House && (
+          {student.Faction && (
             <>
               <Typography variant="body2" color="text.secondary">
                 ·
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {student.House}
+                {student.Faction}
               </Typography>
             </>
           )}
