@@ -44,11 +44,14 @@ export function AuthProvider({ children }) {
   const value = useMemo(
     () => ({
       isAuthenticated: !!password,
-      // 'admin' (the Archivist password): full access — students, staff, classes.
+      // 'admin' (the Archivist password): full access — students, staff, classes,
+      // plus marking Admissions payment status.
       // 'instructor': can only add a class/attendance entry.
+      // 'admissions': can view Admissions, mark payment status, and approve/deny.
       role,
       isAdmin: role === 'admin',
       isInstructor: role === 'instructor',
+      isAdmissions: role === 'admissions',
       password,
       error,
       pending,

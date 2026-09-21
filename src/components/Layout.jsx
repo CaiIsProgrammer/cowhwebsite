@@ -21,9 +21,20 @@ const NAV_ITEMS = [
   { to: '/classes', label: 'Instruction' },
 ];
 
+const ROLE_LABELS = {
+  admin: 'Archivist Access',
+  instructor: 'Instructor Access',
+  admissions: 'Admissions Access',
+};
+
 export default function Layout() {
-  const { isAuthenticated, isAdmin, logout } = useAuth();
+  const { isAuthenticated, isAdmin, isAdmissions, role, logout } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
+
+  const navItems =
+    isAdmin || isAdmissions
+      ? [...NAV_ITEMS, { to: '/admissions', label: 'Admissions' }]
+      : NAV_ITEMS;
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -37,7 +48,7 @@ export default function Layout() {
           </Stack>
 
           <Stack direction="row" spacing={1} sx={{ flexGrow: 1 }}>
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <Button
                 key={item.to}
                 component={NavLink}
@@ -61,7 +72,7 @@ export default function Layout() {
           {isAuthenticated ? (
             <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
               <Chip
-                label={isAdmin ? 'Archivist Access' : 'Instructor Access'}
+                label={ROLE_LABELS[role] ?? 'Access Granted'}
                 color="secondary"
                 size="small"
                 variant="outlined"

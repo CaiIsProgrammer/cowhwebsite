@@ -8,6 +8,8 @@ import StudentsPage from './pages/StudentsPage';
 import StudentDetailPage from './pages/StudentDetailPage';
 import StaffPage from './pages/StaffPage';
 import ClassesPage from './pages/ClassesPage';
+import AdmissionsPage from './pages/AdmissionsPage';
+import AdmissionDetailPage from './pages/AdmissionDetailPage';
 
 export default function App() {
   return (
@@ -22,6 +24,8 @@ export default function App() {
               <Route path="students/:id" element={<StudentDetailPage />} />
               <Route path="staff" element={<StaffPage />} />
               <Route path="classes" element={<ClassesPage />} />
+              <Route path="admissions" element={<AdmissionsPage />} />
+              <Route path="admissions/:timestamp" element={<AdmissionDetailPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

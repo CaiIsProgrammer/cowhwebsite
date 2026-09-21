@@ -42,9 +42,9 @@ function post(action, payload) {
     .then((res) => unwrap(res.data));
 }
 
-function get(sheet) {
+function get(sheet, extraParams) {
   assertConfigured();
-  return client.get('', { params: { sheet } }).then((res) => unwrap(res.data));
+  return client.get('', { params: { sheet, ...extraParams } }).then((res) => unwrap(res.data));
 }
 
 // Returns { success, role } where role is 'admin', 'instructor', or null.
@@ -192,6 +192,23 @@ export function deleteClass({ id, password }) {
   return post('deleteRow', { sheet: 'Classes', id, password }).then((result) => {
     invalidate('Classes');
     invalidate('all');
+    return result;
+  });
+}
+
+// Admissions holds personal application answers, so — unlike the other
+// sheets — reading it requires a password, and it's never part of
+// getAllSheets(). The server only ever accepts writes to Paid Tuiton, Paid
+// Application Fee, and Approved; anything else is rejected.
+export function getAdmissions(password) {
+  return getOrFetch('Admissions', () =>
+    get('Admissions', { password }).then((data) => data.rows ?? [])
+  );
+}
+
+export function updateAdmission({ id, fields, password }) {
+  return post('updateRow', { sheet: 'Admissions', id, fields, password }).then((result) => {
+    invalidate('Admissions');
     return result;
   });
 }

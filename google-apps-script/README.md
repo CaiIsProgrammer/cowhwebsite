@@ -19,11 +19,16 @@ free; you only need to deploy it once inside the Sheet itself.
 5. Set the passwords: **Project Settings** (gear icon in the left
    sidebar) > **Script Properties** > **Add script property**:
    - Property: `APP_PASSWORD` — the **Archivist** password. Grants full
-     access: add/delete students, staff, and classes.
+     access: add/edit/delete students, staff, and classes, and can mark an
+     application's Paid Tuiton / Paid Application Fee status.
    - Property: `INSTRUCTOR_PASSWORD` (optional) — the **Instructor**
      password. Can only record a class and its attendance — cannot add,
      edit, or delete students or staff, and cannot delete anything.
      Leave this property unset if you don't want a separate role.
+   - Property: `ADMISSIONS_PASSWORD` (optional) — the **Admissions**
+     password. Can view the Admissions tab, mark payment status, and
+     approve/deny applications. Cannot touch students, staff, or classes.
+     Leave this property unset if you don't want this role.
 6. Deploy it as a web app: **Deploy > New deployment**.
    - Click the gear next to "Select type" and choose **Web app**.
    - Execute as: **Me**.
@@ -60,6 +65,12 @@ Each tab's first row is the header; do not reorder or rename these columns
 - **Students**: `ID`, `Name`, `School`, `Rank`, `House`, `Faction`, `CreatedAt`
 - **Staff**: `ID`, `Name`, `School`, `Rank`, `Role`, `CreatedAt`
 - **Classes**: `ID`, `StaffName`, `ClassName`, `ClassType`, `Difficulty`, `School`, `Date`, `Time`, `Attendees`, `CreatedAt`
+- **Admissions**: whatever your linked Google Form generates, plus three
+  columns the app tracks itself: `Paid Tuiton`, `Paid Application Fee`, and
+  `Approved` (empty = pending, or `Approved` / `Denied`). Add those three
+  columns by hand at the end of the response sheet if they aren't already
+  there — spelling and capitalization must match exactly, "Tuiton" typo
+  included, since the script matches by header text.
 
 `ID` is a generated UUID, and `Attendees` is a comma-separated list of
 student names who attended that class. `ClassType` is either `Expedition`
@@ -70,3 +81,19 @@ a new column to `SHEET_HEADERS` in `Code.gs` is safe for new rows. It won't
 retroactively fix existing rows if you ever reorder or rename an existing
 column, though — that requires either leaving old columns alone (only add
 new ones) or manually fixing old data to match.
+
+### Admissions is different from the other three tabs
+
+- It's **never included** in the public "all sheets" read or a plain
+  `?sheet=Admissions` request — viewing it requires the Archivist or
+  Admissions password, since applications contain personal answers.
+- `setupSheets()` **never writes to its header row** — it's created and
+  maintained by your linked Google Form, and the three tracking columns you
+  add by hand.
+- The app can only ever write to `Paid Tuiton`, `Paid Application Fee`, and
+  `Approved` on this sheet — every other column (the applicant's actual
+  answers) is rejected if a write ever tried to touch it.
+- Rows are identified by their `Timestamp` (there's no ID column on a Form
+  response sheet), which Sheets stores as a real date — the script
+  normalizes it to an ISO string for comparison against what the client
+  sends.

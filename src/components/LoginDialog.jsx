@@ -32,8 +32,9 @@ export default function LoginDialog({ open, onClose }) {
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              Enter the Archivist password for full access, or the
-              Instructor password to log a class and its attendance.
+              Enter the Archivist password for full access, the Instructor
+              password to log a class and its attendance, or the Admissions
+              password to review applications.
             </Typography>
             <TextField
               autoFocus
