@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
+  Button,
   Chip,
   CircularProgress,
   Paper,
@@ -12,6 +13,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +41,10 @@ function paidChip(value) {
   );
 }
 
+function statusOf(app) {
+  return app.Approved === 'Approved' || app.Approved === 'Denied' ? app.Approved : 'Pending';
+}
+
 // Data fetch is broken out into its own component, keyed by password in the
 // parent — that forces a full remount (fresh useSheetData) if the logged-in
 // role changes while this page is open, instead of quietly fetching with a
@@ -47,11 +54,77 @@ function AdmissionsTable({ password }) {
   const fetcher = useCallback(() => getAdmissions(password), [password]);
   const { data: applications, loading, error } = useSheetData(fetcher);
 
+  // Each filter is a set of selected values for that column; an empty set
+  // means "no filter" (show everything) rather than "show nothing".
+  const [statusFilter, setStatusFilter] = useState([]);
+  const [tuitionFilter, setTuitionFilter] = useState([]);
+  const [feeFilter, setFeeFilter] = useState([]);
+
+  const filtered = useMemo(
+    () =>
+      applications.filter((app) => {
+        if (statusFilter.length > 0 && !statusFilter.includes(statusOf(app))) return false;
+        const tuitionPaid = !!app['Paid Tuiton'] ? 'Paid' : 'Unpaid';
+        if (tuitionFilter.length > 0 && !tuitionFilter.includes(tuitionPaid)) return false;
+        const feePaid = !!app['Paid Application Fee'] ? 'Paid' : 'Unpaid';
+        if (feeFilter.length > 0 && !feeFilter.includes(feePaid)) return false;
+        return true;
+      }),
+    [applications, statusFilter, tuitionFilter, feeFilter]
+  );
+
+  const hasActiveFilters = statusFilter.length > 0 || tuitionFilter.length > 0 || feeFilter.length > 0;
+  const clearFilters = () => {
+    setStatusFilter([]);
+    setTuitionFilter([]);
+    setFeeFilter([]);
+  };
+
   return (
     <Stack spacing={3}>
       <Typography variant="h4">Admissions</Typography>
 
       {error && <Alert severity="error">{error}</Alert>}
+
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', alignItems: 'center' }} useFlexGap>
+          <ToggleButtonGroup size="small" value={statusFilter} onChange={(_, v) => setStatusFilter(v)}>
+            <ToggleButton value="Pending">Pending</ToggleButton>
+            <ToggleButton value="Approved" color="success">
+              Approved
+            </ToggleButton>
+            <ToggleButton value="Denied" color="error">
+              Denied
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          <ToggleButtonGroup size="small" value={tuitionFilter} onChange={(_, v) => setTuitionFilter(v)}>
+            <ToggleButton value="Paid" color="success">
+              Tuition Paid
+            </ToggleButton>
+            <ToggleButton value="Unpaid">Tuition Unpaid</ToggleButton>
+          </ToggleButtonGroup>
+
+          <ToggleButtonGroup size="small" value={feeFilter} onChange={(_, v) => setFeeFilter(v)}>
+            <ToggleButton value="Paid" color="success">
+              Fee Paid
+            </ToggleButton>
+            <ToggleButton value="Unpaid">Fee Unpaid</ToggleButton>
+          </ToggleButtonGroup>
+
+          {hasActiveFilters && (
+            <Button size="small" color="inherit" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </Stack>
+
+        {hasActiveFilters && (
+          <Typography variant="body2" color="text.secondary">
+            Showing {filtered.length} of {applications.length} applications.
+          </Typography>
+        )}
+      </Stack>
 
       <TableContainer component={Paper}>
         <Table>
@@ -72,14 +145,16 @@ function AdmissionsTable({ password }) {
                 </TableCell>
               </TableRow>
             )}
-            {!loading && applications.length === 0 && (
+            {!loading && filtered.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} align="center">
-                  <Typography color="text.secondary">No applications yet.</Typography>
+                  <Typography color="text.secondary">
+                    {applications.length === 0 ? 'No applications yet.' : 'No applications match these filters.'}
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}
-            {applications.map((app) => (
+            {filtered.map((app) => (
               <TableRow
                 key={app.Timestamp}
                 hover
