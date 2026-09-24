@@ -41,7 +41,9 @@ const SHEET_HEADERS = {
     'School',
     'Date',
     'Time',
+    'Timezone',
     'Attendees',
+    'HomeworkCompletedBy',
     'CreatedAt',
   ],
   // This tab is populated by a linked Google Form — setupSheets() never
@@ -189,7 +191,9 @@ function doPost(e) {
           School: body.school,
           Date: body.date,
           Time: body.time,
+          Timezone: body.timezone,
           Attendees: body.attendees,
+          HomeworkCompletedBy: body.homeworkCompletedBy,
         })
       );
     case 'updateRow':

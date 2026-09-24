@@ -64,7 +64,7 @@ Each tab's first row is the header; do not reorder or rename these columns
 
 - **Students**: `ID`, `Name`, `School`, `Rank`, `House`, `Faction`, `CreatedAt`
 - **Staff**: `ID`, `Name`, `School`, `Rank`, `Role`, `CreatedAt`
-- **Classes**: `ID`, `StaffName`, `ClassName`, `ClassType`, `Difficulty`, `School`, `Date`, `Time`, `Attendees`, `CreatedAt`
+- **Classes**: `ID`, `StaffName`, `ClassName`, `ClassType`, `Difficulty`, `School`, `Date`, `Time`, `Timezone`, `Attendees`, `HomeworkCompletedBy`, `CreatedAt`
 - **Admissions**: whatever your linked Google Form generates, plus three
   columns the app tracks itself: `Paid Tuiton`, `Paid Application Fee`, and
   `Approved` (empty = pending, or `Approved` / `Denied`). Add those three
@@ -73,8 +73,15 @@ Each tab's first row is the header; do not reorder or rename these columns
   included, since the script matches by header text.
 
 `ID` is a generated UUID, and `Attendees` is a comma-separated list of
-student names who attended that class. `ClassType` is either `Expedition`
-or `Lecture`, and `Difficulty` is either `Regular` or `Advanced`.
+student names who attended that class. `HomeworkCompletedBy` is the same
+kind of comma-separated list, naming whichever of those attendees have
+completed the homework — it's always a subset of `Attendees`. `ClassType`
+is `Expedition`, `Lecture`, `Quest`, or `Trial`; `Difficulty` is either
+`Regular` or `Advanced`. `Timezone` is an IANA
+zone name (e.g. `America/New_York`) recording what timezone `Date`/`Time`
+were entered in — the app converts this to each viewer's own local
+timezone for display, so it never shows the wrong wall-clock time to
+someone in a different zone than whoever recorded the class.
 
 Writes are matched to columns **by header name**, not position, so adding
 a new column to `SHEET_HEADERS` in `Code.gs` is safe for new rows. It won't

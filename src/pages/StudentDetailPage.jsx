@@ -20,17 +20,22 @@ import useSheetData from '../hooks/useSheetData';
 import { getAllSheets } from '../api/sheetsApi';
 import { SCHOOLS, CLASS_TYPES } from '../theme/theme';
 import RankChip from '../components/RankChip';
+import { formatInViewerTimeZone } from '../utils/dateInput';
 
 const EMPTY = { students: [], staff: [], classes: [] };
 
-function attendedBy(cls, studentName) {
-  return (cls.Attendees || '')
+function namesOf(field) {
+  return (field || '')
     .split(',')
     .map((name) => name.trim())
-    .includes(studentName);
+    .filter(Boolean);
 }
 
-function ClassList({ classes }) {
+function attendedBy(cls, studentName) {
+  return namesOf(cls.Attendees).includes(studentName);
+}
+
+function ClassList({ classes, studentName }) {
   if (classes.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
@@ -40,29 +45,41 @@ function ClassList({ classes }) {
   }
   return (
     <List dense disablePadding>
-      {classes.map((c) => (
-        <ListItem key={c.ID} disableGutters>
-          <ListItemText
-            primary={
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-                <Typography variant="body2" component="span">
-                  {c.ClassName}
-                </Typography>
-                {c.Difficulty && (
+      {classes.map((c) => {
+        const homeworkDone = namesOf(c.HomeworkCompletedBy).includes(studentName);
+        return (
+          <ListItem key={c.ID} disableGutters>
+            <ListItemText
+              primary={
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                  <Typography variant="body2" component="span">
+                    {c.ClassName}
+                  </Typography>
+                  {c.Difficulty && (
+                    <Chip
+                      label={c.Difficulty}
+                      size="small"
+                      variant="outlined"
+                      color={c.Difficulty === 'Advanced' ? 'secondary' : 'default'}
+                      sx={{ height: 18, '& .MuiChip-label': { px: 0.75, fontSize: '0.65rem' } }}
+                    />
+                  )}
                   <Chip
-                    label={c.Difficulty}
+                    label={homeworkDone ? 'Homework Done' : 'Homework Pending'}
                     size="small"
                     variant="outlined"
-                    color={c.Difficulty === 'Advanced' ? 'secondary' : 'default'}
+                    color={homeworkDone ? 'success' : 'default'}
                     sx={{ height: 18, '& .MuiChip-label': { px: 0.75, fontSize: '0.65rem' } }}
                   />
-                )}
-              </Stack>
-            }
-            secondary={[c.StaffName, c.Date, c.Time].filter(Boolean).join(' · ')}
-          />
-        </ListItem>
-      ))}
+                </Stack>
+              }
+              secondary={[c.StaffName, formatInViewerTimeZone(c.Date, c.Time, c.Timezone) || c.Date]
+                .filter(Boolean)
+                .join(' · ')}
+            />
+          </ListItem>
+        );
+      })}
     </List>
   );
 }
@@ -163,8 +180,8 @@ export default function StudentDetailPage() {
       )}
 
       {schoolOrder.map((school) => {
-        // Always show the two real class types for a consistent layout;
-        // only add an "Unspecified" column if this school actually has one.
+        // Always show every real class type for a consistent layout; only
+        // add an "Unspecified" column if this school actually has one.
         const typeColumns = [...CLASS_TYPES, 'Unspecified'].filter(
           (type) => type !== 'Unspecified' || bySchool[school]['Unspecified']
         );
@@ -183,7 +200,7 @@ export default function StudentDetailPage() {
                       {(bySchool[school][type] || []).length}
                     </Typography>
                   </Stack>
-                  <ClassList classes={bySchool[school][type] || []} />
+                  <ClassList classes={bySchool[school][type] || []} studentName={student.Name} />
                 </Grid>
               ))}
             </Grid>

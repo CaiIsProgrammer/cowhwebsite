@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link as RouterLink, useParams } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -22,9 +22,21 @@ import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import { useAuth } from '../context/AuthContext';
 import useSheetData from '../hooks/useSheetData';
 import { getAdmissions, updateAdmission } from '../api/sheetsApi';
+import { SCHOOLS } from '../theme/theme';
 
 const NAME_FIELD = 'What is your full name?';
+const SCHOOL_FIELD = 'What school of magic would you like to study?';
+const FACTION_FIELD = 'What faction do you belong to?';
 const TRACKED_FIELDS = ['Timestamp', 'Paid Tuiton', 'Paid Application Fee', 'Approved'];
+
+// The Form answer is free text even though it's really picking from the
+// same five schools — match it up if it lines up, otherwise leave the
+// School field blank on the pre-filled Add Student form rather than guess.
+function matchSchool(answer) {
+  if (!answer) return '';
+  const found = SCHOOLS.find((s) => s.toLowerCase() === answer.trim().toLowerCase());
+  return found || '';
+}
 
 function statusChip(value) {
   if (value === 'Approved') return <Chip label="Approved" color="success" variant="outlined" />;
@@ -41,11 +53,13 @@ function pendingFromApplication(application) {
 }
 
 function ApplicationView({ password, isAdmin, isAdmissions, timestamp }) {
+  const navigate = useNavigate();
   const fetcher = useCallback(() => getAdmissions(password), [password]);
   const { data: applications, loading, error, refetch } = useSheetData(fetcher);
   const [actionError, setActionError] = useState('');
   const [saving, setSaving] = useState(false);
   const [pending, setPending] = useState(null);
+  const [approvedNotice, setApprovedNotice] = useState(false);
 
   const application = useMemo(
     () => applications.find((a) => a.Timestamp === timestamp),
@@ -77,9 +91,28 @@ function ApplicationView({ password, isAdmin, isAdmissions, timestamp }) {
 
     setSaving(true);
     setActionError('');
+    setApprovedNotice(false);
     try {
       await updateAdmission({ id: timestamp, fields, password });
       await refetch();
+      if (fields.Approved === 'Approved') {
+        if (isAdmin) {
+          // Only an Archivist can actually complete enrollment, so only
+          // launch the Add Student form for that role — an Admissions-only
+          // approver would just hit a permissions error trying to submit it.
+          navigate('/students', {
+            state: {
+              prefill: {
+                name: application[NAME_FIELD] || '',
+                school: matchSchool(application[SCHOOL_FIELD]),
+                faction: application[FACTION_FIELD] || '',
+              },
+            },
+          });
+          return;
+        }
+        setApprovedNotice(true);
+      }
     } catch (err) {
       setActionError(err.message || 'Could not save these changes.');
     } finally {
@@ -180,6 +213,13 @@ function ApplicationView({ password, isAdmin, isAdmissions, timestamp }) {
             <Typography variant="body2" color="text.secondary">
               You don't have permission to update this application.
             </Typography>
+          )}
+
+          {approvedNotice && (
+            <Alert severity="success">
+              Approved. An Archivist can add {application[NAME_FIELD] || 'this applicant'} to the
+              roster from Students → Add Student.
+            </Alert>
           )}
 
           {actionError && <Alert severity="error">{actionError}</Alert>}

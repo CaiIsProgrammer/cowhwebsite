@@ -29,8 +29,20 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useAuth } from '../context/AuthContext';
 import useSheetData from '../hooks/useSheetData';
 import { getClasses, addClass, updateClass, deleteClass, getStaff, getStudents } from '../api/sheetsApi';
-import { toDateInputValue, toTimeInputValue } from '../utils/dateInput';
+import {
+  toDateInputValue,
+  toTimeInputValue,
+  getBrowserTimeZone,
+  formatInViewerTimeZone,
+} from '../utils/dateInput';
 import { SCHOOLS, CLASS_TYPES, CLASS_DIFFICULTIES } from '../theme/theme';
+
+// Falls back to a short curated list on the rare browser without this API
+// (all evergreen browsers since 2022 support it).
+const TIME_ZONES =
+  typeof Intl.supportedValuesOf === 'function'
+    ? Intl.supportedValuesOf('timeZone')
+    : ['UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'Europe/London'];
 
 const EMPTY_FORM = {
   staffName: '',
@@ -40,7 +52,9 @@ const EMPTY_FORM = {
   school: '',
   date: '',
   time: '',
+  timezone: getBrowserTimeZone(),
   attendees: [],
+  homeworkCompletedBy: [],
 };
 
 export default function ClassesPage() {
@@ -77,7 +91,12 @@ export default function ClassesPage() {
       school: cls.School ?? '',
       date: toDateInputValue(cls.Date),
       time: toTimeInputValue(cls.Time),
+      timezone: cls.Timezone || getBrowserTimeZone(),
       attendees: (cls.Attendees || '')
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean),
+      homeworkCompletedBy: (cls.HomeworkCompletedBy || '')
         .split(',')
         .map((name) => name.trim())
         .filter(Boolean),
@@ -135,9 +154,9 @@ export default function ClassesPage() {
               <TableCell>Type</TableCell>
               <TableCell>Difficulty</TableCell>
               <TableCell>School of Magic</TableCell>
-              <TableCell>Date</TableCell>
-              <TableCell>Time</TableCell>
+              <TableCell>When (your time)</TableCell>
               <TableCell>Attendees</TableCell>
+              <TableCell>Homework</TableCell>
               {isAdmin && <TableCell />}
             </TableRow>
           </TableHead>
@@ -163,8 +182,7 @@ export default function ClassesPage() {
                 <TableCell>{c.ClassType || '—'}</TableCell>
                 <TableCell>{c.Difficulty || '—'}</TableCell>
                 <TableCell>{c.School || '—'}</TableCell>
-                <TableCell>{c.Date}</TableCell>
-                <TableCell>{c.Time}</TableCell>
+                <TableCell>{formatInViewerTimeZone(c.Date, c.Time, c.Timezone) || `${c.Date} ${c.Time}`}</TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={0.5} useFlexGap sx={{ flexWrap: 'wrap' }}>
                     {(c.Attendees || '')
@@ -175,6 +193,21 @@ export default function ClassesPage() {
                         <Chip key={name} label={name} size="small" variant="outlined" />
                       ))}
                   </Stack>
+                </TableCell>
+                <TableCell>
+                  {(() => {
+                    const attendeeCount = (c.Attendees || '').split(',').map((n) => n.trim()).filter(Boolean).length;
+                    const doneCount = (c.HomeworkCompletedBy || '').split(',').map((n) => n.trim()).filter(Boolean).length;
+                    if (attendeeCount === 0) return <Chip label="—" size="small" variant="outlined" />;
+                    return (
+                      <Chip
+                        label={`${doneCount}/${attendeeCount}`}
+                        size="small"
+                        color={doneCount === attendeeCount ? 'success' : 'default'}
+                        variant="outlined"
+                      />
+                    );
+                  })()}
                 </TableCell>
                 {isAdmin && (
                   <TableCell align="right">
@@ -282,13 +315,43 @@ export default function ClassesPage() {
                 />
               </Stack>
               <Autocomplete
+                options={TIME_ZONES}
+                value={form.timezone}
+                onChange={(_, value) => setForm((f) => ({ ...f, timezone: value || '' }))}
+                renderInput={(params) => (
+                  <TextField {...params} label="Timezone" required helperText="What timezone the date/time above are in" />
+                )}
+              />
+              <Autocomplete
                 multiple
                 options={studentNames}
                 value={form.attendees}
-                onChange={(_, value) => setForm((f) => ({ ...f, attendees: value }))}
+                onChange={(_, value) =>
+                  setForm((f) => ({
+                    ...f,
+                    attendees: value,
+                    // Someone no longer marked as attending can't stay marked
+                    // as having completed the homework either.
+                    homeworkCompletedBy: f.homeworkCompletedBy.filter((name) => value.includes(name)),
+                  }))
+                }
                 renderInput={(params) => (
                   <TextField {...params} label="Students in Attendance" placeholder="Select students" />
                 )}
+              />
+              <Autocomplete
+                multiple
+                options={form.attendees}
+                value={form.homeworkCompletedBy}
+                onChange={(_, value) => setForm((f) => ({ ...f, homeworkCompletedBy: value }))}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Homework Completed By"
+                    placeholder={form.attendees.length ? 'Select students' : 'Add attendees first'}
+                  />
+                )}
+                disabled={form.attendees.length === 0}
               />
               {formError && <Alert severity="error">{formError}</Alert>}
             </Stack>

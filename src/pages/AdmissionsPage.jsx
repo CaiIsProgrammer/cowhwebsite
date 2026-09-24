@@ -62,14 +62,16 @@ function AdmissionsTable({ password }) {
 
   const filtered = useMemo(
     () =>
-      applications.filter((app) => {
-        if (statusFilter.length > 0 && !statusFilter.includes(statusOf(app))) return false;
-        const tuitionPaid = !!app['Paid Tuiton'] ? 'Paid' : 'Unpaid';
-        if (tuitionFilter.length > 0 && !tuitionFilter.includes(tuitionPaid)) return false;
-        const feePaid = !!app['Paid Application Fee'] ? 'Paid' : 'Unpaid';
-        if (feeFilter.length > 0 && !feeFilter.includes(feePaid)) return false;
-        return true;
-      }),
+      applications
+        .filter((app) => {
+          if (statusFilter.length > 0 && !statusFilter.includes(statusOf(app))) return false;
+          const tuitionPaid = !!app['Paid Tuiton'] ? 'Paid' : 'Unpaid';
+          if (tuitionFilter.length > 0 && !tuitionFilter.includes(tuitionPaid)) return false;
+          const feePaid = !!app['Paid Application Fee'] ? 'Paid' : 'Unpaid';
+          if (feeFilter.length > 0 && !feeFilter.includes(feePaid)) return false;
+          return true;
+        })
+        .sort((a, b) => (a[NAME_FIELD] || '').localeCompare(b[NAME_FIELD] || '')),
     [applications, statusFilter, tuitionFilter, feeFilter]
   );
 

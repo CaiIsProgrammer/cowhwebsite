@@ -133,8 +133,8 @@ export const RANKS = ['Novice', 'Apprentice', 'Adept', 'Expert'];
 // The five schools of magic taught at the College of Winterhold.
 export const SCHOOLS = ['Alteration', 'Conjuration', 'Destruction', 'Illusion', 'Restoration'];
 
-// The two kinds of session a class can be logged as.
-export const CLASS_TYPES = ['Expedition', 'Lecture'];
+// The kinds of session a class can be logged as.
+export const CLASS_TYPES = ['Expedition', 'Lecture', 'Quest', 'Trial'];
 
 // How demanding a class is.
 export const CLASS_DIFFICULTIES = ['Regular', 'Advanced'];

@@ -135,7 +135,9 @@ export function addClass({
   school,
   date,
   time,
+  timezone,
   attendees,
+  homeworkCompletedBy,
   password,
 }) {
   return post('addClass', {
@@ -146,7 +148,9 @@ export function addClass({
     school,
     date,
     time,
+    timezone,
     attendees: attendees.join(', '),
+    homeworkCompletedBy: (homeworkCompletedBy || []).join(', '),
     password,
   }).then((result) => {
     invalidate('Classes');
@@ -164,7 +168,9 @@ export function updateClass({
   school,
   date,
   time,
+  timezone,
   attendees,
+  homeworkCompletedBy,
   password,
 }) {
   return post('updateRow', {
@@ -178,7 +184,9 @@ export function updateClass({
       School: school,
       Date: date,
       Time: time,
+      Timezone: timezone,
       Attendees: attendees.join(', '),
+      HomeworkCompletedBy: (homeworkCompletedBy || []).join(', '),
     },
     password,
   }).then((result) => {

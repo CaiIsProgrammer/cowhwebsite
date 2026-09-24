@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Alert,
   Autocomplete,
@@ -36,6 +36,7 @@ const EMPTY_FORM = { name: '', school: '', rank: '', faction: '' };
 
 export default function StudentsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAdmin, password } = useAuth();
   const { data: students, loading, error, refetch } = useSheetData(getStudents);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,6 +44,22 @@ export default function StudentsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Arriving here from an approved Admissions application (see
+  // AdmissionDetailPage) launches this dialog pre-filled with whatever the
+  // applicant's answers gave us. The nav state is cleared right after so a
+  // refresh or navigating back doesn't reopen it.
+  useEffect(() => {
+    const prefill = location.state?.prefill;
+    if (prefill) {
+      setEditingId(null);
+      setForm({ ...EMPTY_FORM, rank: 'Novice', ...prefill });
+      setFormError('');
+      setDialogOpen(true);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const knownFactions = useMemo(
     () => [...new Set(students.map((s) => s.Faction).filter(Boolean))],

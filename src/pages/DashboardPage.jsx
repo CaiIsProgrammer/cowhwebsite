@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
@@ -5,7 +6,13 @@ import {
   Button,
   Card,
   CardActionArea,
+  Chip,
+  Divider,
   Grid,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
   Stack,
   Typography,
 } from '@mui/material';
@@ -14,6 +21,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import useSheetData from '../hooks/useSheetData';
 import { getAllSheets } from '../api/sheetsApi';
+import { zonedDateTimeToInstant, formatInViewerTimeZone } from '../utils/dateInput';
 
 const TILES = [
   { to: '/students', label: 'Students', icon: SchoolIcon, key: 'students' },
@@ -48,6 +56,19 @@ export default function DashboardPage() {
   // One round trip for all three counts instead of three separate calls —
   // Apps Script's per-call latency makes that difference very noticeable.
   const { data, loading, error } = useSheetData(getAllSheets, EMPTY);
+
+  // Only Lectures and Expeditions belong on the homepage — Quests and
+  // Trials don't show here. Also only classes that haven't happened yet
+  // (in the viewer's own timezone); a past class is instruction history,
+  // which lives on the full Instruction Log instead.
+  const upcomingClasses = useMemo(() => {
+    const now = Date.now();
+    return data.classes
+      .filter((c) => c.ClassType === 'Lecture' || c.ClassType === 'Expedition')
+      .map((c) => ({ ...c, _instant: zonedDateTimeToInstant(c.Date, c.Time, c.Timezone) }))
+      .filter((c) => c._instant && c._instant.getTime() > now)
+      .sort((a, b) => a._instant - b._instant);
+  }, [data.classes]);
 
   return (
     <Stack spacing={4}>
@@ -97,6 +118,42 @@ export default function DashboardPage() {
           View Instruction Log
         </Button>
       </Stack>
+
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Upcoming Classes
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Shown in your local time.
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+        {upcomingClasses.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            {loading ? 'Loading…' : 'No classes scheduled yet.'}
+          </Typography>
+        ) : (
+          <List dense disablePadding>
+            {upcomingClasses.map((c) => (
+              <ListItem key={c.ID} disableGutters>
+                <ListItemText
+                  primary={
+                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+                      <Typography variant="body2" component="span">
+                        {c.ClassName}
+                      </Typography>
+                      {c.School && <Chip label={c.School} size="small" variant="outlined" />}
+                      {c.ClassType && <Chip label={c.ClassType} size="small" variant="outlined" />}
+                    </Stack>
+                  }
+                  secondary={[c.StaffName, formatInViewerTimeZone(c.Date, c.Time, c.Timezone)]
+                    .filter(Boolean)
+                    .join(' · ')}
+                />
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Paper>
     </Stack>
   );
 }
