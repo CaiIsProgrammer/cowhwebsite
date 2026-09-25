@@ -30,7 +30,7 @@ import { getStaff, addStaff, updateStaff, deleteStaff } from '../api/sheetsApi';
 import { RANKS, SCHOOLS } from '../theme/theme';
 import RankChip from '../components/RankChip';
 
-const ROLES = ['Instructor', 'Arch-Mage', 'Steward', 'Court Wizard', 'Researcher'];
+const ROLES = ['Arch-Mage', 'Council', 'Keeper', 'Professor', 'General Staff'];
 
 const EMPTY_FORM = { name: '', school: '', rank: '', role: '' };
 
