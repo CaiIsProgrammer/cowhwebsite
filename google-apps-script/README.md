@@ -3,7 +3,7 @@
 This app has no server of its own — the "backend" is a small Google Apps
 Script bound to your Google Sheet. Apps Script hosts the HTTP endpoint for
 free; you only need to deploy it once inside the Sheet itself.
-
+s
 ## Setup
 
 1. Create a new Google Sheet (or use an existing one) — this will be your
