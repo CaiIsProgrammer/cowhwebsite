@@ -29,6 +29,15 @@ const SCHOOL_FIELD = 'What school of magic would you like to study?';
 const FACTION_FIELD = 'What faction do you belong to?';
 const TRACKED_FIELDS = ['Timestamp', 'Paid Tuiton', 'Paid Application Fee', 'Approved'];
 
+// Google Forms auto-collects the respondent's email into a column (usually
+// literally named "Email Address") whenever "Collect email addresses" is on
+// — that's personal contact info, not an application answer, so it's never
+// shown here even though it lives in the same sheet. Matched loosely in
+// case the exact column name varies.
+function isEmailField(fieldName) {
+  return fieldName.toLowerCase().includes('email');
+}
+
 // The Form answer is free text even though it's really picking from the
 // same five schools — match it up if it lines up, otherwise leave the
 // School field blank on the pre-filled Add Student form rather than guess.
@@ -73,7 +82,10 @@ function ApplicationView({ password, isAdmin, isAdmissions, timestamp }) {
   }, [application]);
 
   const questionFields = useMemo(
-    () => (application ? Object.keys(application).filter((k) => !TRACKED_FIELDS.includes(k)) : []),
+    () =>
+      application
+        ? Object.keys(application).filter((k) => !TRACKED_FIELDS.includes(k) && !isEmailField(k))
+        : [],
     [application]
   );
 
