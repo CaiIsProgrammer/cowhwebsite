@@ -12,10 +12,10 @@
  *      - APP_PASSWORD: the Archivist password. Can add/edit/delete
  *        students, staff, and classes, and can mark an application's
  *        Paid Tuiton / Paid Application Fee status.
- *      - INSTRUCTOR_PASSWORD: the Instructor password. Can only add a
- *        class (with attendance) — cannot touch students or staff, and
- *        cannot edit or delete anything. Leave it unset if you don't want
- *        a separate instructor role.
+ *      - INSTRUCTOR_PASSWORD: the Instructor password. Can add and edit
+ *        classes (attendance, homework, etc.) — cannot touch students or
+ *        staff, and cannot delete anything. Leave it unset if you don't
+ *        want a separate instructor role.
  *      - ADMISSIONS_PASSWORD: the Admissions password. Can view the
  *        Admissions tab and approve/deny applications, and can also mark
  *        Paid Tuiton / Paid Application Fee. Cannot touch students, staff,
@@ -160,6 +160,16 @@ function doPost(e) {
   // entirely separately from the flat admin-only check below.
   if (action === 'updateRow' && body.sheet === 'Admissions') {
     return jsonOutput_(updateAdmissionsRow_(role, body.id, body.fields));
+  }
+
+  // Instructors can add classes and also edit ones already on the books
+  // (e.g. fixing a typo, updating attendance, marking homework) — but still
+  // can't touch Students or Staff, and can't delete a class outright.
+  if (action === 'updateRow' && body.sheet === 'Classes') {
+    if (role !== 'admin' && role !== 'instructor') {
+      return jsonOutput_({ error: 'Only the Archivist or Instructor password can edit classes.' });
+    }
+    return jsonOutput_(updateRow_('Classes', body.id, body.fields));
   }
 
   if (ADMIN_ONLY_ACTIONS.includes(action) && role !== 'admin') {

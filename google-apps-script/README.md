@@ -22,9 +22,10 @@ s
      access: add/edit/delete students, staff, and classes, and can mark an
      application's Paid Tuiton / Paid Application Fee status.
    - Property: `INSTRUCTOR_PASSWORD` (optional) — the **Instructor**
-     password. Can only record a class and its attendance — cannot add,
-     edit, or delete students or staff, and cannot delete anything.
-     Leave this property unset if you don't want a separate role.
+     password. Can record a class and edit one already on the books
+     (attendance, homework, etc.) — cannot add, edit, or delete students or
+     staff, and cannot delete a class. Leave this property unset if you
+     don't want a separate role.
    - Property: `ADMISSIONS_PASSWORD` (optional) — the **Admissions**
      password. Can view the Admissions tab, mark payment status, and
      approve/deny applications. Cannot touch students, staff, or classes.

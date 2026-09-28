@@ -157,7 +157,7 @@ export default function ClassesPage() {
               <TableCell>When (your time)</TableCell>
               <TableCell>Attendees</TableCell>
               <TableCell>Homework</TableCell>
-              {isAdmin && <TableCell />}
+              {(isAdmin || isInstructor) && <TableCell />}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -209,14 +209,16 @@ export default function ClassesPage() {
                     );
                   })()}
                 </TableCell>
-                {isAdmin && (
+                {(isAdmin || isInstructor) && (
                   <TableCell align="right">
                     <IconButton size="small" onClick={() => openEditDialog(c)}>
                       <EditOutlinedIcon fontSize="small" />
                     </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(c.ID)}>
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
+                    {isAdmin && (
+                      <IconButton size="small" onClick={() => handleDelete(c.ID)}>
+                        <DeleteOutlineIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </TableCell>
                 )}
               </TableRow>
